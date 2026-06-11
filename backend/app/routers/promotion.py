@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.models.user import User, Coach
 from app.models.student import Student
 from app.models.assessment import PhysicalAssessment
+from app.models.training import TrainingRecord
 from app.models.promotion import PromotionSuggestion
 from app.schemas.promotion import PromotionSuggestionOut, PromotionConfirm
 from app.schemas.response import success_response, error_response
@@ -16,6 +18,21 @@ from app.middleware.auth import (
 )
 
 router = APIRouter(prefix="/api/promotions", tags=["晋升建议"])
+
+
+def _calculate_composite_score(
+    technique_avg: float,
+    fitness_avg: float,
+    match_avg: float,
+    physical_avg: float,
+) -> float:
+    score = (
+        technique_avg * settings.PROMOTION_WEIGHT_TECHNIQUE
+        + fitness_avg * settings.PROMOTION_WEIGHT_FITNESS
+        + match_avg * settings.PROMOTION_WEIGHT_MATCH
+        + physical_avg * settings.PROMOTION_WEIGHT_PHYSICAL
+    )
+    return round(score, 2)
 
 
 @router.post("/generate/{year}/{quarter}")
@@ -49,6 +66,16 @@ def generate_promotion_suggestions(
 
     student_scores = []
     for sid in assigned_student_ids:
+        trainings = (
+            db.query(TrainingRecord)
+            .filter(
+                TrainingRecord.student_id == sid,
+                TrainingRecord.year == year,
+                TrainingRecord.week_number >= week_start,
+                TrainingRecord.week_number <= week_end,
+            )
+            .all()
+        )
         assessments = (
             db.query(PhysicalAssessment)
             .filter(
@@ -59,30 +86,56 @@ def generate_promotion_suggestions(
             )
             .all()
         )
+
+        technique_avg = 0.0
+        fitness_avg = 0.0
+        match_avg = 0.0
+        physical_avg = 0.0
+        has_any_data = False
+
+        if trainings:
+            technique_avg = sum(t.technique_score for t in trainings) / len(trainings)
+            fitness_avg = sum(t.fitness_score for t in trainings) / len(trainings)
+            match_avg = sum(t.match_score for t in trainings) / len(trainings)
+            has_any_data = True
+
         if assessments:
-            avg_score = sum(a.total_score for a in assessments) / len(assessments)
-            student_scores.append((sid, avg_score))
+            physical_avg = sum(a.total_score for a in assessments) / len(assessments)
+            has_any_data = True
+
+        if has_any_data:
+            composite = _calculate_composite_score(
+                technique_avg, fitness_avg, match_avg, physical_avg
+            )
+            student_scores.append((sid, composite))
 
     if not student_scores:
         return success_response(data=[], message="该季度无评估数据")
 
     student_scores.sort(key=lambda x: x[1], reverse=True)
 
-    top_30_count = max(1, int(len(student_scores) * 0.3))
+    total = len(student_scores)
+    top_n = max(1, int(total * settings.PROMOTION_AUTO_SUGGEST_THRESHOLD))
+    threshold_pct = settings.PROMOTION_AUTO_SUGGEST_THRESHOLD * 100
     suggestions = []
-    for idx, (sid, avg_score) in enumerate(student_scores):
-        rank_pct = round((idx + 1) / len(student_scores) * 100, 2)
-        auto_suggested = idx < top_30_count
+    for idx, (sid, composite) in enumerate(student_scores):
+        rank_pct = round((idx + 1) / total * 100, 2)
+        auto_suggested = idx < top_n
 
         suggestion = PromotionSuggestion(
             student_id=sid,
             coach_id=coach.id,
             quarter=quarter,
             year=year,
+            composite_score=composite,
             rank_percentage=rank_pct,
             auto_suggested=auto_suggested,
             status="suggested" if auto_suggested else "not_recommended",
-            notes="自动生成：前30%推荐晋升" if auto_suggested else "自动生成：未进入前30%",
+            notes=(
+                f"自动生成：前{int(threshold_pct)}%推荐晋升（综合得分：{composite}）"
+                if auto_suggested
+                else f"自动生成：未进入前{int(threshold_pct)}%（综合得分：{composite}）"
+            ),
         )
         db.add(suggestion)
         suggestions.append(suggestion)

@@ -1,11 +1,11 @@
 import http from './index'
 
 export function generatePromotionsApi(year: number, quarter: number) {
-  return http.post('/promotions/generate', { year, quarter })
+  return http.post(`/promotions/generate/${year}/${quarter}`)
 }
 
 export function getPromotionsApi(params: { year: number; quarter: number }) {
-  return http.get('/promotions', { params })
+  return http.get(`/promotions/${params.year}/${params.quarter}`)
 }
 
 export function confirmPromotionApi(id: number, data: { status: string; notes?: string }) {

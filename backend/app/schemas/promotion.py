@@ -10,6 +10,7 @@ class PromotionSuggestionOut(BaseModel):
     coach_id: Optional[int] = None
     quarter: int
     year: int
+    composite_score: float
     rank_percentage: float
     auto_suggested: bool
     status: str

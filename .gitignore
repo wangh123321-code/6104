@@ -25,3 +25,8 @@ venv/
 *.swo
 .cache/
 .next/
+test_*.py
+test_*.ps1
+check_*.py
+tmp_*.json
+backend/migrations/

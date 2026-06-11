@@ -14,6 +14,7 @@ class PromotionSuggestion(Base):
     coach_id: Mapped[int] = mapped_column(ForeignKey("coaches.id"), nullable=True)
     quarter: Mapped[int] = mapped_column(Integer, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
+    composite_score: Mapped[float] = mapped_column(Float, default=0.0)
     rank_percentage: Mapped[float] = mapped_column(Float, default=0.0)
     auto_suggested: Mapped[bool] = mapped_column(Boolean, default=True)
     status: Mapped[str] = mapped_column(String(20), default="suggested")
