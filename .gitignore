@@ -28,5 +28,6 @@ venv/
 test_*.py
 test_*.ps1
 check_*.py
+init_test_data.py
 tmp_*.json
 backend/migrations/
