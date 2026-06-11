@@ -92,6 +92,7 @@ const tableLoading = ref(false)
 const studentOptions = ref<any[]>([])
 const commentList = ref<any[]>([])
 const editingId = ref<number | null>(null)
+const editingVersion = ref<number>(1)
 const conflictVisible = ref(false)
 const conflictServerText = ref('')
 const conflictClientText = ref('')
@@ -156,8 +157,7 @@ async function handleSubmit() {
     if (editingId.value) {
       await updateCommentApi(editingId.value, {
         content: form.content,
-        month: form.month,
-        year: form.year
+        version: editingVersion.value
       })
       ElMessage.success('评语已更新')
       editingId.value = null
@@ -174,7 +174,7 @@ async function handleSubmit() {
     await loadComments()
   } catch (err: any) {
     if (err.code === 409) {
-      conflictServerText.value = err.serverData?.content || ''
+      conflictServerText.value = err.serverData?.current_content || ''
       conflictClientText.value = form.content
       conflictVisible.value = true
     } else {
@@ -190,6 +190,7 @@ async function handleOverwrite() {
   try {
     await updateCommentApi(editingId.value, {
       content: form.content,
+      version: editingVersion.value,
       force: true
     })
     ElMessage.success('评语已覆盖')
@@ -207,6 +208,7 @@ async function handleMerge(mergedText: string) {
   try {
     await updateCommentApi(editingId.value, {
       content: mergedText,
+      version: editingVersion.value,
       force: true
     })
     ElMessage.success('评语已合并')
@@ -221,6 +223,7 @@ async function handleMerge(mergedText: string) {
 
 function startEdit(row: any) {
   editingId.value = row.id
+  editingVersion.value = row.version
   form.student_id = row.student_id
   form.year = row.year
   form.month = row.month

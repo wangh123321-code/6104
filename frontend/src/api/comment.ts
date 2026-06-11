@@ -13,8 +13,7 @@ export function updateCommentApi(
   id: number,
   data: {
     content: string
-    month?: number
-    year?: number
+    version: number
     force?: boolean
   }
 ) {

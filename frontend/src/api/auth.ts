@@ -1,12 +1,7 @@
 import http from './index'
 
 export function loginApi(username: string, password: string) {
-  const formData = new URLSearchParams()
-  formData.append('username', username)
-  formData.append('password', password)
-  return http.post('/auth/login', formData, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-  })
+  return http.post('/auth/login', { username, password })
 }
 
 export function registerApi(data: {

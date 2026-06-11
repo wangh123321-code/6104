@@ -33,12 +33,14 @@ http.interceptors.response.use(
         router.push('/login')
         ElMessage.error('登录已过期，请重新登录')
       } else if (status === 409) {
-        const err: any = new Error(data?.message || '冲突')
+        const detail = data?.detail || data
+        const err: any = new Error(detail?.message || '冲突')
         err.code = 409
-        err.serverData = data?.data
+        err.serverData = detail?.data
         return Promise.reject(err)
       } else {
-        ElMessage.error(data?.message || `请求错误 (${status})`)
+        const detail = data?.detail || data
+        ElMessage.error(detail?.message || `请求错误 (${status})`)
       }
     } else {
       ElMessage.error('网络连接失败')

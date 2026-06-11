@@ -10,7 +10,7 @@ class UserCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     phone: str = Field(default="", max_length=20)
     specialty: Optional[str] = None
-    relationship: Optional[str] = None
+    kinship: Optional[str] = None
 
 
 class UserLogin(BaseModel):

@@ -41,7 +41,7 @@
   "name": "张教练",
   "phone": "13800000001",
   "specialty": "短跑",
-  "relationship": null
+  "kinship": null
 }
 ```
 
@@ -53,7 +53,7 @@
 | name | string | 是 | 真实姓名 |
 | phone | string | 否 | 手机号 |
 | specialty | string | 否 | 教练专长（role=coach时） |
-| relationship | string | 否 | 与学员关系（role=parent时） |
+| kinship | string | 否 | 与学员关系（role=parent时） |
 
 **响应:** 返回用户信息
 
@@ -353,14 +353,16 @@
 
 ```json
 {
-  "code": 0,
-  "data": {
-    "current_version": 3,
-    "current_content": "其他教练已更新的内容...",
-    "your_version": 2,
-    "your_content": "你提交的内容..."
-  },
-  "message": "版本冲突，数据已被其他人修改"
+  "detail": {
+    "code": 1,
+    "data": {
+      "current_version": 3,
+      "current_content": "其他教练已更新的内容...",
+      "your_version": 2,
+      "your_content": "你提交的内容..."
+    },
+    "message": "版本冲突，数据已被其他人修改"
+  }
 }
 ```
 

@@ -46,7 +46,7 @@ def register(body: UserCreate, db: Session = Depends(get_db)):
         coach = Coach(user_id=user.id, specialty=body.specialty or "")
         db.add(coach)
     elif body.role == "parent":
-        parent = Parent(user_id=user.id, kinship=body.relationship or "家长")
+        parent = Parent(user_id=user.id, kinship=body.kinship or "家长")
         db.add(parent)
 
     db.commit()

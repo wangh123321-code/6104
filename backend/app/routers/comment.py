@@ -87,10 +87,11 @@ def update_comment(
         )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=success_response(
-                data=conflict.model_dump(),
-                message="版本冲突，数据已被其他人修改",
-            ),
+            detail={
+                "code": 1,
+                "data": conflict.model_dump(),
+                "message": "版本冲突，数据已被其他人修改",
+            },
         )
 
     comment.content = body.content
